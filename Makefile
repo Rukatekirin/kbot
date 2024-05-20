@@ -3,7 +3,9 @@ TARGETOS=linux
 
 format: 
 	gofmt -s -w ./
-
+get:
+	go get
+	
 lint:
 	golint
 
