@@ -1,19 +1,35 @@
+APP=$(shell basename $(shell git remote get-url origin) | sed 's/\.git$$//')
+REGISTRY=ghcr.io/rukatekirin
 VERSION=$(shell git describe --tags --abbrev=0)-$(shell git rev-parse --short HEAD)
+#VERSION=v1.0.2-$(shell git rev-parse --short HEAD)
 TARGETOS=linux
+TARGETARCH=amd64
+IMAGENAME := ${REGISTRY}/${APP}:${VERSION}-${OS}-${ARCH}
 
-format: 
-	gofmt -s -w ./
 get:
 	go get
-	
+
+format:
+	gofmt -s -w ./
+
 lint:
 	golint
 
 test:
 	go test -v
 
-build: format
-	CGO_ENABLE=0 GOOS=${TARGETOS} GOARCH=${shell dpkg --print-architecture} go build -v -o kbot -ldflags "-X="github.com/Rukatekirin/kbot/cmd.appVersion=${VERSION}
+build: format get
+	CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -v -o kbot -ldflags "-X="github.com/rukatekirin/kbot/cmd.appVersion=${VERSION}
+
+image:
+	docker build . -t ${IMAGENAME}
+
+push:
+	docker push ${IMAGENAME}
 
 clean:
 	rm -rf kbot
+	docker rmi ${IMAGENAME}
+
+show:
+	echo ${VERSION}
